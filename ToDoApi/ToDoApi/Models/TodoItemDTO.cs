@@ -1,11 +1,10 @@
 ﻿using System;
-namespace ToDoApi.DTO
+namespace ToDoApi.Models;
+
+public class TodoItemDTO
 {
-    public class TodoItemDTO
-    {
-        public long Id { get; set; }
-        public string Name { get; set; }
-        public bool isComplete { get; set; }
-    }
+    public long Id { get; set; }
+    public string Name { get; set; }
+    public bool isComplete { get; set; }
 }
 

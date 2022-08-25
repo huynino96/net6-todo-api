@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ToDoApi.Models;
-using TodoApi.Models;
 
 namespace ToDoApi.Controllers
 {
@@ -25,11 +24,7 @@ namespace ToDoApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
         {
-            if (_context.TodoItems == null)
-            {
-                return NotFound();
-            }
-            return await _context.TodoItems.ToListAsync();
+            return await _context.TodoItems.Select(x => TodoItemDTO(x)).ToListAsync();
         }
 
         // GET: api/TodoItems/5
@@ -49,40 +44,25 @@ namespace ToDoApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodoItem(long id, TodoItem todoItem)
         {
-            if (id != todoItem.Id)
-            {
-                return BadRequest();
-            }
 
-            _context.Entry(todoItem).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TodoItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
         // POST: api/TodoItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
+        public async Task<ActionResult<TodoItem>> CreateTodoItem(TodoItemDTO todoItemDTO)
         {
+            var todoItem = new TodoItem
+            {
+                isComplete = todoItemDTO.isComplete,
+                Name = todoItemDTO.Name
+            };
+
             _context.TodoItems.Add(todoItem);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetTodoItem), new { id = todoItem.Id }, todoItem);
+
+            return CreatedAtAction(
+                nameof(GetTodoItem), new { id = todoItem.Id }, ItemToDTO(todoItem));
         }
 
         // DELETE: api/TodoItems/5
@@ -104,5 +84,12 @@ namespace ToDoApi.Controllers
         {
             return (_context.TodoItems?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+
+        private static TodoItemDTO ItemToDTO(TodoItem todoItem) => new TodoItemDTO
+        {
+            Id = todoItem.Id,
+            Name = todoItem.Name,
+            isComplete = todoItem.isComplete
+        };
     }
 }
