@@ -89,16 +89,11 @@ namespace ToDoApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodoItem(long id)
         {
-            if (_context.TodoItems == null)
-            {
-                return NotFound();
-            }
             var todoItem = await _context.TodoItems.FindAsync(id);
             if (todoItem == null)
             {
                 return NotFound();
             }
-
             _context.TodoItems.Remove(todoItem);
             await _context.SaveChangesAsync();
 
