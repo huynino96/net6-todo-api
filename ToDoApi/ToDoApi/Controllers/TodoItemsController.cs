@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TodoApi.Models;
 using ToDoApi.Models;
 
 namespace ToDoApi.Controllers
@@ -22,9 +23,9 @@ namespace ToDoApi.Controllers
 
         // GET: api/TodoItems
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
+        public async Task<ActionResult<IEnumerable<TodoItemDTO>>> GetTodoItems()
         {
-            return await _context.TodoItems.Select(x => TodoItemDTO(x)).ToListAsync();
+            return await _context.TodoItems.Select(x => ItemToDTO(x)).ToListAsync();
         }
 
         // GET: api/TodoItems/5
@@ -42,9 +43,31 @@ namespace ToDoApi.Controllers
         // PUT: api/TodoItems/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTodoItem(long id, TodoItem todoItem)
+        public async Task<IActionResult> UpdateTodoItem(long id, TodoItemDTO todoItemDTO)
         {
+            if(id != todoItemDTO.Id)
+            {
+                return BadRequest();
+            }
+            var todoItem = await _context.TodoItems.FindAsync(id);
+            if(todoItem == null)
+            {
+                return NotFound();
+            }
 
+            todoItem.Name = todoItemDTO.Name;
+            todoItem.isComplete = todoItemDTO.isComplete;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException) when (!TodoItemExists(id))
+            {
+                return NotFound();
+            }
+
+            return NoContent();
         }
 
         // POST: api/TodoItems
